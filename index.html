@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>山河四省粮食产量</title>
+
+
+    <!-- 引用源码文件 -->
+    <!-- <script src="../libs/Cesium/Cesium.js"></script> -->
+    <script src="./Cesium/Cesium.js"></script>
+    <link rel="stylesheet" href="./Cesium/Widgets/widgets.css">
+<!-- 引用d3数据处理库 -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+    <script src="https://cdn.bootcss.com/xlsx/0.11.5/xlsx.core.min.js"></script>
+    <style>
+        html,body{
+            margin: 0%;
+            padding: 0%;
+            /* background-color:rgba(0, 0, 0, 0.2) */
+        }
+        button{
+             background: transparent;
+            border: 1px solid #00d0ffb8;
+            color: white;
+             /* padding: 7px 9px;  */
+            border-radius: 2px;
+            /* margin: 3px; */
+            cursor: pointer 
+        }
+        input{
+             background: transparent;
+            /* border: 1px solid #00d0ffb8; */
+            color: white;
+            /* padding: 7px 9px; */
+            /* border-radius: 2px; */
+            /* margin: 3px; */
+            cursor: pointer
+        }
+       /* iframe{margin:0px;padding:0px;border:0px;width:100%;height:100%;} */
+        .btn-container{
+            position: absolute;
+            left: 10px;
+            bottom: 80%;
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid rgba(128, 128, 128, 0.5);
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 3px 14px rgb(128 128 128 / 50%);
+            max-width: 360px;
+        }
+        .input-container{
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid rgba(128, 128, 128, 0.5);
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 3px 14px rgb(128 128 128 / 50%);
+            max-width: 130px;
+        }
+        #cesiumContainer{
+            width: 60%;
+            height: 100%;
+            position:absolute;
+        }
+        /* iframe{
+            position: absolute;
+            
+        } */
+        #yield{
+            position: absolute;
+             /* right: 20px; */
+            /* top: 0%;  */
+            right: 2%;
+            top: 2.5%;
+            width: 40%;
+            height: 50%;
+            margin:0px;
+            padding:0px;
+            border:0px;
+            
+        }
+        #weather{
+            position: absolute;
+            right: 0.5%;
+            top:50%;
+            width: 40%;
+            height: 50%;
+            margin:0px;
+            padding:0px;
+            border:0px;
+            
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="cesiumContainer"> </div>
+    <!-- src:默认展示页面 -->
+    <iframe src="./test.html"id="yield"  scrolling="no"  frameborder="0">
+</iframe>
+
+    <iframe src="./cs.html"id="weather"  scrolling="no"  frameborder="0">
+</iframe>
+
+
+    <div class="input-container">
+        <input type="file" id="excel-file">
+    </div>
+    <div class="btn-container">
+    <button onclick="remove_entities()">移除实体</button>
+    <button onclick="alert_show_yield(yield_year[0])">2005年产量</button>
+    <button onclick="alert_show_yield(yield_year[1])">2006年产量</button>
+    <button onclick="alert_show_yield(yield_year[2])">2007年产量</button>
+    <button onclick="alert_show_yield(yield_year[3])">2008年产量</button>
+    <button onclick="alert_show_yield(yield_year[4])">2009年产量</button>
+    <button onclick="alert_show_yield(yield_year[5])">2010年产量</button>
+    <button onclick="alert_show_yield(yield_year[6])">2011年产量</button>
+    <button onclick="alert_show_yield(yield_year[7])">2012年产量</button>
+    <button onclick="alert_show_yield(yield_year[8])">2013年产量</button>
+    <button onclick="alert_show_yield(yield_year[9])">2014年产量</button>
+    </div>
+    <div></div>
+
+<script  >
+      // Your access token can be found at: https://cesium.com/ion/tokens.
+    //这是账户上的授权tokens
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZWU4ZGZmZS0wOTZlLTQ4YzQtOGM3OS02MzRiNzc0OTdlOWUiLCJpZCI6MTE0NjIzLCJpYXQiOjE2NjgyMzI3Nzh9.HVk7OIA04OU94OeezRqSah9dpF9aQngQ-OH6jTK6yxU';
+    // Cesium.MapboxApi.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZWU4ZGZmZS0wOTZlLTQ4YzQtOGM3OS02MzRiNzc0OTdlOWUiLCJpZCI6MTE0NjIzLCJpYXQiOjE2NjgyMzI3Nzh9.HVk7OIA04OU94OeezRqSah9dpF9aQngQ-OH6jTK6yxU';
+
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+    // scene3DOnly: true,
+    imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+                url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+            }),
+    selectionIndicator: false,
+    // baseLayerPicker: false,
+    timeline:false,
+    animation:false,
+    // terrainProvider: Cesium.createWorldTerrain({
+    //     requestVertexNormals: true,
+    //     requestWaterMask: true
+    // })
+});
+
+// //设定相机的观测位置
+viewer.camera.setView({
+    destination : Cesium.Cartesian3.fromDegrees(113.66, 34.75, 1000000)  // 设置相机的位置
+    // orientation: {
+    //     heading : Cesium.Math.toRadians(heading), 
+    //     pitch : Cesium.Math.toRadians(pitch),   
+    //     roll : 0.0                            
+    // } 
+});
+function remove_entities(){
+    viewer.entities.removeAll();
+
+}
+
+// 声明实体变量
+var food_point
+// 添加实体
+function foodStuff(lng,lat){
+food_point=viewer.entities.add({
+    object_id:0,
+    name:"实体",
+    position: Cesium.Cartesian3.fromDegrees(lng,lat),
+    point: {
+        show: true,
+        pixelSize: 10, // 像素大小
+        heightReference: Cesium.HeightReference.NONE,
+        outlineWidth: 0,
+        scaleByDistance: new Cesium.NearFarScalar(1.0e3, 10.0, 2.0e3, 1.0),
+        translucencyByDistance: new Cesium.NearFarScalar(
+        1.0e3,
+        1.0,
+        1.5e6,
+        0.5
+        ),
+        // distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
+        //   1.0e3,
+        //   2.0e3
+        // ),
+        // 获取或设置与相机的距离，在深度处禁用深度测试，例如，以防止剪切地形。
+        // 设置为零时，将始终应用深度测试。设置为Number.POSITIVE_INFINITY时，永远不会应用深度测试。
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+    });
+}
+
+// 展示产量
+function show_foodstuff(years){
+var foodStuff_lng=get_lng()
+var foodStuff_lat=get_lat()
+console.log(foodStuff_lng)
+console.log(foodStuff_lat)
+// RGB色带数组
+var RGB=[
+    [255,228,225],
+    [250,128,114],
+    [250,128,114],
+    [205,92,92],
+    [255,0,0],
+    [165,42,42],
+    [178,34,34],
+    [139,0,0],
+    [128,0,0]
+]
+//   获取2005年产量
+var yield_data=[]
+yield_data=get_yield(years)
+console.log(yield_data)
+// 获取城乡县区名
+var county_name=[];
+county_name=get_county();
+// 获取城乡区县ID
+var county_ID=[];
+county_ID=get_county_ID();
+console.log("城乡县区ID",county_ID);
+
+// 05年产量最大值和最小值
+var yield_data_max=Math.max.apply(null,yield_data)
+console.log("产量最大值",yield_data_max)
+var yield_data_min=Math.min.apply(null,yield_data)
+
+// 在此之前先去除上一个实体
+viewer.entities.removeAll();
+    // 循环添加点位置和赋值颜色表
+for(let i=0;i<foodStuff_lng.length;i++){
+    foodStuff(foodStuff_lng[i],foodStuff_lat[i])
+    // 循环添加城市名
+    food_point.name=county_name[i];
+    // 循环添加城市ID
+    food_point.object_id=i;
+    let index_color=Math.abs(Math.round(((yield_data[i]-yield_data_min)/(yield_data_max-yield_data_min))*9)-1) ;
+// console.log("颜色索引:",RGB[index_color][2])
+    food_point.point.color=new Cesium.Color(RGB[index_color][0],RGB[index_color][1],RGB[index_color][2]);
+}
+}
+
+// // 对代码进行复用
+var yield_year=["yield2005","yield2006","yield2007","yield2008","yield2009","yield2010","yield2011","yield2012",
+"yield2013","yield2014"];
+// var yield_2008="yield2008"
+// 展示各年的产量
+function alert_show_yield(years){
+    show_foodstuff(years);
+}
+// 读取产量xlsx格式
+ var persons = []; // 存储获取到的excel数据
+$('#excel-file').change(function(e) {
+            var files = e.target.files;
+            var fileReader = new FileReader();
+            fileReader.onload = function(ev) {
+                try {
+                    var data = ev.target.result;
+                        workbook = XLSX.read(data, {
+                            type: 'binary'
+                        }); // 以二进制流方式读取得到整份excel表格对象
+                        console.log("结果为:",workbook)
+                } catch (e) {
+                    console.log('文件类型不正确');
+                    return;
+                }
+                // 表格的表格范围，可用于判断表头是否数量是否正确
+                var fromTo = '';
+                // 遍历每张表读取
+                for (var sheet in workbook.Sheets) {
+                    if (workbook.Sheets.hasOwnProperty(sheet)) {
+                        fromTo = workbook.Sheets[sheet]['!ref'];
+                        persons = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets[sheet]));
+                        // break; // 如果只取第一张表，就取消注释这行
+                    }
+                }
+                console.log("打印workbook表名:",workbook.Sheets)
+                console.log("excel表",persons);
+                console.log("城市产量",persons[2]);
+                console.log(persons.length);
+            };
+            // 以二进制方式打开文件
+            fileReader.readAsBinaryString(files[0]);
+        });
+
+
+// //获取表中经纬度
+function get_lng(){
+    var food_lng=[]
+for(let i=0;i<persons.length;i++ ){
+    food_lng.push(persons[i].lng)
+    }
+    return food_lng
+}
+function get_lat(){
+var food_lat=[]
+for(let i=0;i<persons.length;i++ ){
+    food_lat.push(persons[i].lat)
+    }
+return food_lat
+}
+// 获取特定城市的2005-2014年产量
+function zone_yield(zone_id){
+    let yield=[persons[zone_id].yield2005,persons[zone_id].yield2006,persons[zone_id].yield2007,persons[zone_id].yield2008,
+    persons[zone_id].yield2009,persons[zone_id].yield2010,persons[zone_id].yield2011,persons[zone_id].yield2012,
+    persons[zone_id].yield2013,persons[zone_id].yield2014
+
+];
+console.log("特定地区产量",yield)
+return yield;
+}
+//      获取2005-2014年产量
+function get_yield(years){
+        var yield=[]
+        for(let i=0;i<persons.length;i++){
+            yield.push(persons[i][years])
+        }
+    return yield
+    console.log(yield)
+}
+// 获取城乡县区编号
+function get_county_ID(){
+    let county_ID=[]
+    for(let i=0;i<persons.length;i++){
+            county_ID.push(persons[i]["ID"])
+        }
+    return county_ID
+}
+// 获取城乡县区名
+function get_county(){
+    let county_name=[]
+    for(let i=0;i<persons.length;i++){
+            county_name.push(persons[i]["MC"])
+        }
+    return county_name
+}
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function (movement) {
+        //pick.id即为entity
+        // 获取实体位置坐标
+        var picked = viewer.scene.pick(movement.position);
+        if (Cesium.defined(picked) && picked.id.id) {
+                            var id = picked.id.id
+                            var name = picked.id._name;
+                            // 获取位置坐标
+                            var position=picked.id._position._value;
+                            // 获取县区id
+                            var county_ID=picked.id.object_id;
+                            console.log("picked获取到的信息",picked.id);
+                            console.log("获取的县区ID",county_ID)
+                            console.log("获取的坐标值",position);
+                            var get_zone_yield=zone_yield(county_ID);
+                            console.log("获取的产量值",get_zone_yield);
+                            const scene = viewer.scene;
+                            
+        }
+        console.log(picked);
+        // console.log(pick);
+        // console.log(county_ID);
+        console.log("获取的地区名",name);
+
+        // 获取子窗口全内容元素
+        var weather_iframe=document.getElementById("weather").contentWindow;
+        var yield_iframe=document.getElementById("yield").contentWindow;
+        yield_iframe.postMessage({ msg: get_zone_yield,name },
+    'http://127.0.0.1:5501/test.html');
+    console.log(yield_iframe);
+        weather_iframe.postMessage({ msg: county_ID },
+    'http://127.0.0.1:5501/cs.html');
+        console.log(weather_iframe);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+</script>
+</body>
+</html>
+

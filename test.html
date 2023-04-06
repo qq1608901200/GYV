@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    
+    <title>Document</title>
+    <script src="Yield.js" type="module"></script>
+</head>
+
+<body>
+    <script>
+
+    writeYieldInfoElement("鹿泉市", "[2005,2006,2007,2008,2009,2010,2011,2012,2013,2014]", "[6.324077729,6.469937242,6.615796755,6.761656267,6.90751578,7.053375293,5.946300571,6.075002944,6.110244193,7.127886541]");
+    window.addEventListener('message', function (e) {
+    console.log(e);
+    // var county_ID=e.data.msg;
+    let yield_data=e.data.msg;
+    let zone_name=e.data.name;
+    console.log("获取到的特定地区名",zone_name);
+    console.log("获取到的特定地区各年yield",yield_data);
+     // test the yield-info element
+    var yield_dataString =data_string(yield_data)
+    // var zone_name_dataString=data_string(zone_name)
+    console.log("强转换成字符串",yield_dataString);
+    console.log("强制转换后的类型",typeof(yield_dataString))
+        writeYieldInfoElement(zone_name, "[2005,2006,2007,2008,2009,2010,2011,2012,2013,2014]",yield_dataString);
+})
+
+function data_string(yield_data){
+    let data_string="[";
+    a=[]
+    for(let i=0;i<yield_data.length-1;i++){
+        data_string+=yield_data[i]+",";
+    }
+    data_string+=yield_data[9]+"]"
+    console.log("data_string后的数据",data_string)
+    return data_string;
+}
+        // generate the yield-info element in string format
+        function generateYieldInfoElement(name, labels, data) {
+            // return `<yield-info name="${name}" labels="${labels}" data="${data} id="y"></yield-info>`;
+            return `<yield-info name="${name}" labels="${labels}" data="${data}" id = "y" ></yield-info>`;
+        }
+
+        /**
+         * write the yield-info element to the html
+         * @param {string} name
+         * @param {string} labels
+         * @param {string} data
+         */        
+        function writeYieldInfoElement(name, labels, data) {
+            // ocument.body.insertAdjacentHTML('beforeend', htmlString);
+            var element=document.getElementById("y");
+            if(element){
+            element.parentNode.removeChild(element);
+            }
+            document.body.insertAdjacentHTML('beforeend', generateYieldInfoElement(name, labels, data));
+        }
+
+    </script>
+</body>
+</html>

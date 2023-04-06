@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <!-- <script src="./chart.js"></script> -->
+    <script type="module" src="main.js"></script>
+</head>
+<body>
+    <!-- <button id="btn">click</button> -->
+    <popup-info id="w"></popup-info>
+
+    <script>
+        // 图表初始化
+        // load the csv data with url "http://127.0.0.1:5500/0.csv"
+var defalut_weather=generateURL(0);
+        console.log(defalut_weather);
+        add_weather(defalut_weather);
+
+        function add_weather(url){
+            d3.csv(url).then(function(data) {
+            data = convertData(data);
+            let dataString = JSON.stringify(data);
+            document.getElementById('w').setAttribute('data', dataString); 
+        });
+        }
+window.addEventListener('message', function (e) {
+    console.log(e)
+    var county_ID=e.data.msg;
+    console.log("county",county_ID);
+    var url=generateURL(county_ID);
+    // var result=generateURL(280);
+    console.log(url);
+    // update_weather(url);
+    d3.csv(url).then(function(data) {
+                data = convertData(data);
+                let dataString = JSON.stringify(data);
+                // delete the element with id "w"
+                document.getElementById('w').remove();
+                // generate the new element string and write it to the html
+                let htmlString = generateHTML(dataString);
+                // write the new element to the html
+                document.body.insertAdjacentHTML('beforeend', htmlString);
+            });
+})
+
+
+        // html element string generate function . input datastring
+        function generateHTML(dataString) {
+            return `<popup-info id="w" data=`+dataString+`></popup-info>`;
+        }
+        // data is a list with shape [{m0:1.0, m1:2.0, m2:3.0 ,...,m119:120.0},
+        // {m0:1.0, m1:2.0, m2:3.0 ,...m119:120.0}},
+        // {m0:1.0, m1:2.0, m2:3.0 ,...m119:120.0}},
+        // {m0:1.0, m1:2.0, m2:3.0 ,...m119:120.0}},]
+        // convert it to nums array with shape of [4,120]
+        function convertData(data) {
+            let nums = [];
+            for (let i = 0; i < data.length; i++) {
+                let row = [];
+                for (let j = 0; j < 120; j++) {
+                    row.push(data[i]['m' + j]);
+                }
+                nums.push(row);
+            }
+            return nums;
+        }
+        // generate the URL for the csv file in range(120)
+        function generateURL(i) {
+            // return "http://"+window.location.host+"/山河四省产量"+"/dataset2/"+i+".csv";
+            return "http://"+window.location.host+"/dataset2/"+i+".csv";
+        }
+    </script>
+</body>
+</html>
